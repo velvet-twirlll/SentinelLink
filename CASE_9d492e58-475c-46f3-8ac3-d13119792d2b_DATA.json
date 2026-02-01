@@ -1,0 +1,12 @@
+{
+    "case_id": "9d492e58-475c-46f3-8ac3-d13119792d2b",
+    "url": "https://secure-bank-login-verify.com/",
+    "risk_score": 95,
+    "flags": [
+        "verify account",
+        "urgent action",
+        "password expiry"
+    ],
+    "timestamp": "2026-02-01T07:45:14.869379",
+    "integrity_hash": "3183fb8d8ed64f3eb262f24934b6bbc8326d531c76c8f6e939d72f8eac2d7bba"
+}

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SentinelLink | Threat Intel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background: #0f172a; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+        
+        #widget-container {
+            width: 70px; height: 70px; background: #0f172a;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            border: 3px solid #334155; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            cursor: pointer; position: fixed; top: 15px; left: 15px; z-index: 50; transition: all 0.3s;
+        }
+        #widget-container:hover { transform: scale(1.1); border-color: #3b82f6; }
+
+        #dashboard-container { display: none; height: 100vh; width: 100vw; background: #0f172a; color: #e2e8f0; flex-direction: column; }
+        
+        .tab-btn { padding: 12px 20px; color: #94a3b8; border-bottom: 2px solid transparent; cursor: pointer; transition: 0.2s; }
+        .tab-btn.active { color: #3b82f6; border-bottom-color: #3b82f6; font-weight: bold; }
+        .tab-content { display: none; padding: 20px; height: 100%; overflow-y: auto; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .terminal-box { background: #020617; border: 1px solid #1e293b; padding: 15px; font-family: 'Consolas', monospace; color: #10b981; font-size: 0.85rem; overflow-x: auto; max-height: 400px; white-space: pre-wrap; }
+        .label-text { color: #64748b; font-weight: bold; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px; }
+    </style>
+</head>
+<body>
+
+    <div id="widget-container" onclick="expandApp()">
+        <i class="fa-solid fa-shield-cat text-3xl text-blue-500"></i>
+    </div>
+
+    <div id="dashboard-container">
+        <div class="h-16 border-b border-slate-800 flex items-center justify-between px-6 bg-slate-900">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-shield-cat text-blue-500 text-2xl"></i>
+                <h1 class="text-xl font-bold">Sentinel<span class="text-blue-500">Link</span></h1>
+            </div>
+            <button onclick="shrinkApp()" class="text-slate-400 hover:text-white text-sm bg-slate-800 px-3 py-1 rounded"><i class="fa-solid fa-minimize mr-1"></i> Minimize</button>
+        </div>
+
+        <div class="flex border-b border-slate-800 bg-slate-900/50">
+            <button onclick="switchTab('scanner')" id="tab-scanner" class="tab-btn active"><i class="fa-solid fa-radar mr-2"></i>Scanner</button>
+            <button onclick="switchTab('forensics')" id="tab-forensics" class="tab-btn"><i class="fa-solid fa-link mr-2"></i>Forensics & Quai</button>
+            <button onclick="switchTab('decoys')" id="tab-decoys" class="tab-btn"><i class="fa-solid fa-mask mr-2"></i>Decoys & Traps</button>
+        </div>
+
+        <div id="scanner" class="tab-content active">
+            <div class="max-w-4xl mx-auto mt-6">
+                <div class="flex bg-slate-800 rounded-lg p-2 border border-slate-700 shadow-xl mb-8">
+                    <input type="text" id="urlInput" placeholder="Paste suspicious link..." class="w-full bg-transparent border-none text-white px-4 outline-none text-lg">
+                    <button onclick="runScan()" class="bg-blue-600 hover:bg-blue-500 text-white px-8 rounded font-bold transition">SCAN</button>
+                </div>
+
+                <div id="scan-results" class="hidden grid grid-cols-2 gap-8">
+                    <div class="bg-black rounded-lg border border-slate-700 relative h-64 flex items-center justify-center">
+                        <img id="screenshot-img" src="" class="max-h-full max-w-full">
+                        <span class="absolute bottom-2 left-2 bg-slate-900/80 text-green-400 text-xs px-2 py-1 rounded">AIR-GAPPED FEED</span>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                            <h3 class="text-slate-400 text-xs uppercase font-bold">Risk Analysis</h3>
+                            <div id="risk-display" class="text-5xl font-bold text-white my-2">--</div>
+                            <div id="flags-container" class="flex flex-wrap gap-2 mt-4"></div>
+                        </div>
+                        <div class="bg-slate-800 p-4 rounded-lg border border-slate-700 flex items-center justify-between">
+                            <div class="text-xs text-slate-400">Quai Anchor Status</div>
+                            <div class="text-xs bg-green-900 text-green-400 px-2 py-1 rounded border border-green-700">
+                                <i class="fa-solid fa-link mr-1"></i> MINED
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="forensics" class="tab-content">
+            <div class="max-w-5xl mx-auto mt-4 grid grid-cols-2 gap-6">
+                
+                <div class="col-span-2 bg-slate-800 border border-slate-700 rounded-xl p-6 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10">
+                        <i class="fa-solid fa-cubes text-9xl"></i>
+                    </div>
+                    <h3 class="text-white font-bold text-lg mb-4 flex items-center">
+                        <span class="bg-red-500 w-2 h-6 mr-3 rounded-sm"></span> 
+                        Quai Network Proof
+                    </h3>
+                    <div class="grid grid-cols-4 gap-4 mb-4">
+                        <div class="bg-slate-900 p-3 rounded border border-slate-700">
+                            <div class="label-text">Quai Region</div>
+                            <div class="text-white font-mono mt-1 text-sm font-bold text-blue-400" id="chain-region">--</div>
+                        </div>
+                        <div class="bg-slate-900 p-3 rounded border border-slate-700">
+                            <div class="label-text">Quai Zone</div>
+                            <div class="text-white font-mono mt-1 text-sm font-bold text-purple-400" id="chain-zone">--</div>
+                        </div>
+                        <div class="bg-slate-900 p-3 rounded border border-slate-700">
+                            <div class="label-text">Block Height</div>
+                            <div class="text-white font-mono mt-1 text-sm" id="chain-block">--</div>
+                        </div>
+                        <div class="bg-slate-900 p-3 rounded border border-slate-700">
+                            <div class="label-text">Gas Used</div>
+                            <div class="text-white font-mono mt-1 text-sm" id="chain-gas">--</div>
+                        </div>
+                    </div>
+                    
+                    <div class="label-text mb-1">Transaction Hash (TxID)</div>
+                    <div class="bg-slate-900 p-3 rounded border border-slate-700 text-blue-400 font-mono text-xs break-all mb-4" id="chain-tx">waiting for scan...</div>
+                    
+                    <div class="label-text mb-1">Evidence Integrity Hash (SHA-256)</div>
+                    <div class="bg-slate-900 p-3 rounded border border-slate-700 text-yellow-500 font-mono text-xs break-all" id="chain-hash">waiting for scan...</div>
+                </div>
+
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 h-full">
+                    <h3 class="text-white font-bold text-sm mb-3">HTTP Headers & Server Fingerprint</h3>
+                    <div class="terminal-box" id="raw-headers">No data captured.</div>
+                </div>
+
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 h-full flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-white font-bold text-sm mb-3">Chain of Custody</h3>
+                        <p class="text-slate-400 text-sm mb-4">
+                            The integrity hash above matches the PDF report. Verification can be performed against the Quai ledger.
+                        </p>
+                    </div>
+                    <button onclick="downloadReport()" class="w-full bg-slate-700 hover:bg-slate-600 text-slate-200 py-3 rounded border border-slate-600 font-bold">
+                        <i class="fa-solid fa-file-pdf mr-2"></i> Download Evidence PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="decoys" class="tab-content">
+            <div class="max-w-2xl mx-auto mt-6 text-center">
+                <i class="fa-solid fa-user-secret text-6xl text-slate-700 mb-4"></i>
+                <h2 class="text-2xl font-bold text-white mb-2">Honey Token Generator</h2>
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-8 text-left mt-6">
+                    <label class="text-xs text-red-400 uppercase font-bold">⚠️ Trap Link</label>
+                    <div class="flex gap-2 mt-1">
+                        <input id="trap-link" readonly class="w-full bg-slate-900 border border-red-900/50 rounded p-3 text-red-400 font-mono text-sm" value="...">
+                        <button onclick="copyTrap()" class="bg-slate-700 px-4 rounded hover:bg-slate-600"><i class="fa-solid fa-copy"></i></button>
+                    </div>
+                    <button onclick="generateDecoy()" class="w-full mt-6 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded font-bold shadow-lg">REFRESH BAIT</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentScanData = null;
+        function expandApp() { document.getElementById('widget-container').style.display = 'none'; document.getElementById('dashboard-container').style.display = 'flex'; if(window.pywebview) window.pywebview.api.resize_to_dashboard(); }
+        function shrinkApp() { document.getElementById('dashboard-container').style.display = 'none'; document.getElementById('widget-container').style.display = 'flex'; if(window.pywebview) window.pywebview.api.resize_to_icon(); }
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content, .tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.getElementById('tab-' + tabId).classList.add('active');
+        }
+        async function runScan() {
+            const url = document.getElementById('urlInput').value;
+            if(!url) return;
+            const btn = document.querySelector('button[onclick="runScan()"]');
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> SCANNING';
+            try {
+                const res = await fetch('/api/v1/scan', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({url: url}) });
+                const data = await res.json();
+                currentScanData = data;
+                document.getElementById('scan-results').classList.remove('hidden');
+                document.getElementById('screenshot-img').src = data.screenshot || "";
+                const scoreEl = document.getElementById('risk-display');
+                scoreEl.innerText = data.risk_score + "/100";
+                scoreEl.className = data.risk_score > 50 ? "text-5xl font-bold text-red-500" : "text-5xl font-bold text-green-500";
+                const flagsCont = document.getElementById('flags-container');
+                flagsCont.innerHTML = "";
+                (data.flags || ["Safe"]).forEach(f => { flagsCont.innerHTML += `<span class="bg-slate-700 px-3 py-1 rounded text-sm border border-slate-600 mx-1">${f}</span>`; });
+
+                // QUAI DATA UPDATE
+                if(data.blockchain_proof) {
+                    document.getElementById('chain-region').innerText = data.blockchain_proof.topology.region;
+                    document.getElementById('chain-zone').innerText = data.blockchain_proof.topology.zone;
+                    document.getElementById('chain-block').innerText = data.blockchain_proof.block_height;
+                    document.getElementById('chain-gas').innerText = data.blockchain_proof.gas_used + " Gwei";
+                    document.getElementById('chain-tx').innerText = data.blockchain_proof.transaction_hash;
+                    document.getElementById('chain-hash').innerText = data.blockchain_proof.integrity_hash;
+                }
+                if(data.network_data) document.getElementById('raw-headers').innerText = JSON.stringify(data.network_data, null, 2);
+            } catch(e) { console.error(e); alert("Scan Failed"); } finally { btn.innerText = "SCAN"; }
+        }
+        async function generateDecoy() {
+            try {
+                const res = await fetch('/api/v1/decoy/generate', {method: 'POST'});
+                const data = await res.json();
+                document.getElementById('trap-link').value = data.trap_link;
+            } catch(e) { console.error(e); }
+        }
+        async function downloadReport() {
+            if(!currentScanData) return;
+            const btn = document.querySelector('button[onclick="downloadReport()"]');
+            btn.innerText = "Generating PDF...";
+            try {
+                const res = await fetch('/api/v1/report/download', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(currentScanData) });
+                const resp = await res.json();
+                alert("Report saved to: " + resp.file_path);
+            } catch(e) { alert("Download Failed"); } finally { btn.innerHTML = '<i class="fa-solid fa-file-pdf mr-2"></i> Download Evidence PDF'; }
+        }
+        function copyTrap() { const copyText = document.getElementById("trap-link"); copyText.select(); navigator.clipboard.writeText(copyText.value); alert("Trap Link Copied!"); }
+        generateDecoy();
+    </script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+# --- Core API & Server ---
+fastapi>=0.100.0
+uvicorn[standard]       # "[standard]" installs uvloop for 3x faster performance
+
+# --- Browser Automation & Stealth ---
+playwright>=1.35.0
+playwright-stealth      # REQUIRED for the "StealthSession" module we built
+
+# --- Data Validation & Configuration ---
+pydantic>=2.0.0         # For the strict schemas (ScanRequest, HoneyToken)
+pydantic-settings       # For managing environment variables (.env files)
+
+# --- Security & Forensics ---
+slowapi                 # For the Rate Limiting logic (@limiter.limit)
+fpdf2                   # For generating the Forensic PDF Reports
+faker                   # For generating decoy data (names, addresses)
+
+# --- Utilities ---
+aiofiles                # (Optional but recommended) For non-blocking file I/O
+python-multipart        # Required if you accept file uploads in FastAPI
