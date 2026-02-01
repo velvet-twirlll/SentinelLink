@@ -1,5 +1,6 @@
 # SentinelLink
-SentinelLink: Zero-Trust Anti-Phishing Ecosystem 🛡️
+SentinelLink: Zero-Trust Anti-Phishing Ecosystem 
+
 SentinelLink is a proactive "Digital Bodyguard" designed to protect users from the "Golden Hour" of cybercrime—the critical window before a scam link is blacklisted.
 
  The Vision
